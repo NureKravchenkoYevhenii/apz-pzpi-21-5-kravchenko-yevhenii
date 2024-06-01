@@ -1,0 +1,242 @@
+1 ОПИС АРХІТЕКТУРИ СИСТЕМИ
+
+Backend-частина програмної системи – це ASP.NET Core Web API застосунок, написаний на платформі .NET 8 та мові програмування C#. У якості архітектури системи виступає багатошарова архітектура з поділом на 4 рівні: Domain, DAL, BLL та Web API. Вона забезпечує високий рівень абстрактності та надає можливість легко змінювати наявний функціонал та додавати новий.
+Конфігурація проєкту зберігається у файлі appsettings.json, який містить налаштування авторизації, рядок підключення до БД, SMTP-налаштування та налаштування оплати.
+У «Infrastructure» знаходяться моделі для налаштування авторизації, підключення до БД, SMTP-налаштувань та налаштувань оплати. Також він містить константи, перерахування, вийнятки, контейнер інверсії контролю та файли перекладів.
+У «Domain» знаходяться моделі для бази даних.
+«DAL» слугує для забезпечення взаємодії з базою даних.
+«BLL» містить усю бізнес-логіку проєкту. Серед цікавих частин коду, можна виділити методи, які слугують для розрахунку ціни за сесію паркування з урахуванням усіх необхідних тарифів. Ціна розраховується за наступною формулою
+	S=∑_(i=1)^n▒t_i *P_i	(1)
+де S – ціна за сесію паркування;
+n – кількість тарифів;
+ti – час, на який сесія перетинається з і-тим тарифом у хвилинах;
+Pi – ціна і-го тарифу за хвилину.
+Фрагменти коду наведені у додатку В.
+У директорії «WebAPI» розташовані усі контролери, допоміжні моделі та конфігурація застосунку. 
+У ході розробки серверної частини були використані наступні шаблони проектування: «Unit Of Work», що був обраний для забезпечення цілісності та атомарності операцій з базою даних, та «Dependency Injection» для написання слабкозв’язного коду.
+
+2 ПОБУДОВА ДІАГРАМИ РОЗГОРТАННЯ
+
+UML діаграма розгортання демонструє фізичну структуру системи, що розроблюється. Система складається з наступних компонентів: веб застосунку, серверної частини системи, мобільного пристрою, бази даних, персонального комп’ютера та системи управління шлагбаумом на базі Arduino.
+Взаємодія між частинами системи відбувається за допомогою протоколу HTTPS. Персональний комп’ютер взаємодіє через веб-браузер з веб застосунком через порт номер 80. Веб застосунок, система управління шлагбаумом та додаток на  мобільному пристрої підтримуються зв’язок із серверною частиню через порт номер 7061. Серверна частину у свою чергу взаємодіє з базою даних через порт номер 1433.
+
+3 ПОБУДОВА UML ДІАГРАМИ ПРЕЦЕНДЕНТІВ
+
+UML діаграма прецендентів описує функціональне призначення системи, що створюється та демонструє основні бізнес-можливості користувачів системи
+Адміністратор парковки має можливість управляти налаштуваннями парковки, управляти тарифами за паркування, управляти місцями для паркування та управляти абонементами (у тому числі блокувати абонементи користувачам, що порушили правила). Також він має змогу переглядати зареєстрованих у системі користувачів, що включає у себе можливість шукати, фільтрувати та сортувати користувачів, бронювати місця для паркування техніки спеціальних служб, завантажувати дані користувачів у систему та переглядати актуальну інформацію про зайнятість місць для паркування. Окрім цього адміністратор парковки може формувати звіт зі статистикою оплат за певний період та звіт зі статистикою зайнятості парковки за певний період.
+Звичайний користувач має можливість редагувати власний профіль, управляти списком власних транспортних засобів, переглядати історію паркувань та історію транзакцій. Також він має змогу бронювати паркувальне місце, переглядати актуальну інформацію про зайнятість місць для паркування, оплачувати рахунки за паркування та купляти абонементи.
+Системний адміністратор може управляти ролями користувачів та робити резервні копії бази даних.
+Неавторизований користувач може авторизуватися, зареєструватися та змінити пароль, якщо він його забув, отримавши відповідного листа на пошту.
+
+4 ПОБУДОВА ER-МОДЕЛІ ДАНИХ
+
+Для створення бази даних було виділено наступні сутності: машина («Car»), місце для паркування («ParkingPlace»), бронювання («Booking»), абенемент («Membership»), користувач («User»), абонемент користувача («UserMembership»), сесія паркування («ParkingSession»), оплата («Payment»), токен зміни паролю («ResetPasswordToken»), токен оновлення («RefreshToken»), профіль користувача («UserProfile») та тариф («Tarif»).
+На ER-діаграмі наведені зв’язки між цими сутностями, серед яких можна виділити наступні:
+–	користувач та машина мають відношення «один-до-багатьох»;
+–	користувач та сесія паркування має відношення «один-до-багатьох»;
+–	користувач може мати 0 або багато токенів зміни паролю водночас токен відноситься лише до одного користувача – відношення «один-до-багатьох»;
+–	користувач може мати 0 або багато токенів оновлення водночас токен відноситься лише до одного користувача – відношення «один-до-багатьох»;
+–	користувач може мати один профіль водночас один профіль належить одному користувачу – відношення «один-до-одного»;
+–	користувач може мати 0 або багато оплат водночас оплата може не мати або мати лише одного користувача – відношення «один-до-багатьох»;
+–	користувач може мати 0 або багато куплених абонементів водночас куплений абонемент відноситься лише до одного користувача – відношення «один-до-багатьох»;
+–	абонемент може бути куплений багатьма користувачами водночас куплений абонемент відноситься лише до одного абонемента – відношення «один-до-багатьох»;
+–	користувач може мати 0 або багато бронювань водночас бронювання відноситься лише одного користувача – відношення «один-до-багатьох»;
+–	місце для паркування може мати 0 або багато бронювань водночас бронювання відноситься лише до одного місця для паркування;
+–	тариф не має відношень з іншими сутностями.
+
+5. ПОБУДОВА UML ДІАГРАМИ КОМПОНЕНТІВ
+
+Шляхом використання діаграми компонентів була відображена структура серверної частини системи, а також з’ясовано зв’язки та залежності між її складовими елементами. З наданої діаграми видно, що контролери є залежними від рівня бізнес-логіки, який, в свою чергу, взаємодіє з рівнем доступу до даних. Ін’єкція репозиторіїв у сервіси системи відбувається за допомогою патерну «UnitOfWork». Для впровадження залежностей використовується патерн «Dependency Injection».
+
+6 СПЕЦИФІКАЦІЯ REST
+
+REST API даного проєкту складається з багатьох ендпоінтів для забезпечення взаємодії клієнтських частин із серверною частиною застосунку.
+Специфікація кожного ендпоінту наведена у додатку Б.
+Можна виділити наступні контролери: 
+–	«AuthController»;
+–	«AdministrationController»;
+–	«BookingsController»;
+–	«CarsController»;
+–	«MembershipsController»;
+–	«ParkingPlacesController»;
+–	«ParkingSessionsController»;
+–	«PaymentController»;
+–	«TarifsController»;
+–	«UsersController».
+
+ВИСНОВКИ
+
+У результаті виконання лабораторної роботи була розроблена серверна частина програмної системи для управління парковками житлових комплексів та офісів. Крім того, в процесі роботи були створені діаграма прецендентів, ER-діаграма, діаграма компонентів та діаграма розгортання.
+
+ДОДАТОК А
+Специфікація REST
+
+Таблиця 1 – Специфікація AuthController
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+login	POST	FromBody	login	string	Ok, Bad Request
+			password		
+get-user-by-refresh-token	GET	FromHeader	refreshTokenString	string	Ok, Bad Request
+
+
+Таблиця 2 – Специфікація «AdministrationController»
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+backup-database	POST	FromBody	savePath	string	Ok, Bad Request Unauthorized, Forbidden
+update-parking-settings	POST	FromBody	bookingTime
+AdvanceInMinutes	int	Ok, Bad Request Unauthorized, Forbidden
+			bookingDuration
+InMinutes	int	
+ 
+Таблиця 3 – Специфікація «BookingsController»
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+make-booking	POST	FromBody	id	int	Ok, Bad Request Unauthorized
+			bookDate	DateTime	
+			userId	int	
+cancel-booking	DELETE	FromQuery	bookingId	int	Ok, Bad Request Unauthorized
+get-user-bookings	GET	FromQuery	userId	int	Ok, Bad Request Unauthorized
+
+Таблиця 4 – Специфікація «CarsController»
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+create	POST	FromBody	id	int	Ok, Bad Request Unauthorized
+			carNumber	string	
+			userId	int	
+get-user-cars	GET	FromQuery	userId	int	Ok, Bad Request Unauthorized
+delete	DELETE	FromQuery	carId	int	Ok, Bad Request Unauthorized
+
+ 
+Продовження таблиці 4
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+get	GET	FromQuery	carId	int	Ok, Bad Request Unauthorized
+update	POST	FromBody	id	int	Ok, Bad Request Unauthorized
+			carNumber	string	
+			userId	int	
+
+Таблиця 5 – Специфікація «MembershipsController»
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+create	POST	FromBody	id	int	Ok, Bad Request Unauthorized Forbidden
+			name	string	
+			durationInDays	int	
+			price	decimal	
+delete	DELETE	FromQuery	membershipId	int	Ok, Bad Request Unauthorized Forbidden
+get-all	GET	-	-	-	Ok, Unauthorized Forbidden
+get	GET	FromQuery	membershipId	int	Ok, Bad Request Unauthorized Forbidden
+
+Продовження таблиці 5
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+update	POST	FromBody	id	int	Ok, Bad Request Unauthorized Forbidden
+			name	string	
+			durationInDays	int	
+			price	decimal	
+purchase	POST	FromBody	membershipId	int	Ok, Bad Request Unauthorized
+			userId	int	
+
+Таблиця 6 – Специфікація «ParkingPlacesController»
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+create	POST	FromBody	id	int	Ok, Bad Request Unauthorized Forbidden
+			name	string	
+delete	DELETE	FromQuery	parkingPlaceId	int	Ok, Bad Request Unauthorized Forbidden
+get-all	GET	-	-	-	Ok, Unauthorized Forbidden
+get	GET	FromQuery	parkingPlaceId	int	Ok, Bad Request Unauthorized Forbidden
+Продовження таблиці 6
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+update	POST	FromBody	id	int	Ok, Bad Request Unauthorized Forbidden
+			name	string	
+occupancy-statistics	GET	-	-	-	Ok, Bad Request Unauthorized
+
+Таблиця 7 – Специфікація «ParkingSessionsController»
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+check-in	POST	FromBody	carNumber	string	Ok, Bad Request Unauthorized
+check-out	POST	FromBody	carNumber	string	Ok, Bad Request Unauthorized
+user-parking-sessions	GET	FromQuery	userId	int	Ok, Bad Request Unauthorized
+get-parking-statistics	GET	FromQuery	from	DateTime	Ok, Bad Request Unauthorized Forbidden
+			to	DateTime	
+
+ 
+Таблиця 8 – Специфікація «PaymentController»
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+get	GET	FromQuery	paymentId	int	Ok, Bad Request Unauthorized
+get-user-payments	GET	FromQuery	userId	int	Ok, Bad Request Unauthorized
+payment-result	POST	FromForm	data	string	Ok, Bad Request
+			signature	string	
+			apiKey	Guid	
+get-statistics	GET	FromQuery	from	DateTime	Ok, BadRequest, Unauthorized Forbidden
+			to	DateTime	
+
+Таблиця 9 – Специфікація «TarifsController»
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+create	POST	FromBody	id	int	Ok, Bad Request Unauthorized Forbidden
+			name	string	
+			activeDaysOfWeek	int[]	
+			startTime	TimeOnly	
+			endTime	TimeOnly	
+			timeUnitValue	int	
+			pricePerTimeUnit	decimal	
+delete	DELETE	FromQuery	tarifId	int	Ok, Bad Request Unauthorized
+
+ 
+Продовження таблиці 9
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+get-all	GET	-	-	-	Ok, Unauthorized Forbidden
+get	GET	FromQuery	tarifId	int	Ok, Bad Request Unauthorized,
+Forbidden
+update	POST	FromBody	id	int	Ok, Bad Request
+			name	string	
+			activeDaysOfWeek	int[]	
+			startTime	TimeOnly	
+			endTime	TimeOnly	
+			timeUnitValue	int	
+			pricePerTimeUnit	decimal	
+
+Таблиця 10 – Специфікація «UsersController»
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+forgot-password	POST	FromBody	email	string-	Ok, Bad Request¬¬
+request-reset-password	GET	FromQuery	token	string	Ok, Bad Request
+reset-password	POST	FromBody	token	string	Ok, Bad Request
+			password	string	
+			confirmPassword	String	
+Продовження таблиці 11
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+register	POST	FromBody	userId	int	Ok, Bad Request
+			login	string	
+			password	string	
+			firstName	string	
+			lastName	string	
+			profilePicture	byte[]	
+			address	string	
+			phoneNumber	string	
+			birthDate	DateTime	
+			email	string	
+register	POST	FromBody	id	int	Ok, Bad Request Unauthorized
+			firstName	string	
+			lastName	string	
+			profilePicture	byte[]	
+			address	string	
+			phoneNumber	string	
+			birthDate	DateTime	
+			email	string	
+get-all	GET	FromQuery	searchQuery	string	Ok, Bad Request, Unauthorized Forbidden
+get	GET	FromQuery	userId	int	Ok, Bad Request, Unauthorized
+ 
+Продовження таблиці 11
+Дія	Метод	Параметр	Відповіді
+		Джерело	Назва	Тип	
+set-user-role	POST	FromBody	userId	int	Ok, Bad Request Unauthorized Forbidden
+			role	int	
+block-membership	POST	FromBody	isBlocked	boolean	Ok, Bad Request Unauthorized Forbidden
+			comment	string	
+			userMembershipId	int	
+upload-user-data	POST	FromForm	file	byte[]	Ok, Bad Request Unauthorized Forbidden
