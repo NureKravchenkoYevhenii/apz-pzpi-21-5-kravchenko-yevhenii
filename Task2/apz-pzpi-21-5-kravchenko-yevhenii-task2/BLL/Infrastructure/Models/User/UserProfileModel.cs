@@ -1,4 +1,5 @@
-﻿using Infrastructure.Enums;
+﻿using BLL.Infrastructure.Models.UserMembership;
+using Infrastructure.Enums;
 
 namespace BLL.Infrastructure.Models;
 public class UserProfileModel
@@ -25,5 +26,9 @@ public class UserProfileModel
 
     public DateTime RegistrationDate { get; set; }
 
+    public string RegistrationDateStr { get; set; } = null!;
+
     public Role Role { get; set; }
+
+    public UserMembershipModel? UserMembershipModel { get; set; }
 }

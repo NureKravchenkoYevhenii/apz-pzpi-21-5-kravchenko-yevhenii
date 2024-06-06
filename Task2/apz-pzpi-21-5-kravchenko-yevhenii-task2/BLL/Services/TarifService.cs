@@ -31,8 +31,8 @@ public class TarifService : ITarifService
         {
             if (AreTarifsIntersectOnDayOfWeek(tarifModel, tarif, out var intersectDay))
             {
-                if (tarifModel.EndTime > tarif.StartTime
-                    || tarif.EndTime > tarifModel.StartTime)
+                if (tarifModel.EndTime >= tarif.StartTime && tarifModel.EndTime <= tarif.EndTime
+                    || tarifModel.StartTime >= tarif.StartTime && tarifModel.StartTime <= tarif.EndTime)
                 {
                     throw new ParkyException("TARIFS_INTERSECT");
                 }
@@ -82,8 +82,8 @@ public class TarifService : ITarifService
         {
             if (AreTarifsIntersectOnDayOfWeek(tarifModel, tarif, out var intersectDay))
             {
-                if (tarifModel.EndTime > tarif.StartTime
-                    || tarif.EndTime > tarifModel.StartTime)
+                if (tarifModel.EndTime >= tarif.StartTime && tarifModel.EndTime <= tarif.EndTime
+                    || tarifModel.StartTime >= tarif.StartTime && tarifModel.StartTime <= tarif.EndTime)
                 {
                     throw new ParkyException("TARIFS_INTERSECT");
                 }

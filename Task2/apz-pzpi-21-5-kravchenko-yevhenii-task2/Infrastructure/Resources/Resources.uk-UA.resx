@@ -214,4 +214,10 @@
   <data name="PARKING_SESSION_NOT_FOUND" xml:space="preserve">
     <value>Сесію паркування не знайдено</value>
   </data>
+  <data name="PurchaseMembership" xml:space="preserve">
+    <value>Покупка абонементів</value>
+  </data>
+  <data name="PayForParkingSession" xml:space="preserve">
+    <value>Оплата паркування</value>
+  </data>
 </root>

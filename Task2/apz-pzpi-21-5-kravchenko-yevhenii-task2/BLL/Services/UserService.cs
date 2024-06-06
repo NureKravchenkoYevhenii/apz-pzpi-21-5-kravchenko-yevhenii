@@ -3,6 +3,7 @@ using BLL.Contracts;
 using BLL.Infrastructure.Extensions;
 using BLL.Infrastructure.Filters;
 using BLL.Infrastructure.Models;
+using BLL.Infrastructure.Models.UserMembership;
 using DAL.Contracts;
 using Domain.Models;
 using Infrastructure.Configs;
@@ -23,6 +24,7 @@ public class UserService : IUserService
     private readonly Lazy<IRepository<User>> _users;
     private readonly Lazy<IRepository<ResetPasswordToken>> _resetPasswordTokens;
     private readonly Lazy<IRepository<UserProfile>> _userProfiles;
+    private readonly Lazy<IRepository<UserMembership>> _userMemberships;
 
     public UserService(
         Lazy<AuthOptions> authOptions,
@@ -36,6 +38,7 @@ public class UserService : IUserService
         _users = _unitOfWork.Value.GetLazyRepository<User>();
         _resetPasswordTokens = _unitOfWork.Value.GetLazyRepository<ResetPasswordToken>();
         _userProfiles = _unitOfWork.Value.GetLazyRepository<UserProfile>();
+        _userMemberships = _unitOfWork.Value.GetLazyRepository<UserMembership>();
     }
 
     public Guid CreateRefreshToken(int userId)
@@ -97,6 +100,7 @@ public class UserService : IUserService
                 ?? throw new EntityNotFoundException("USER_NOT_FOUND");
 
         var userProfile = _mapper.Value.Map<UserProfileModel>(user);
+        FillUserMembershipModel(userProfile);
 
         return userProfile;
     }
@@ -274,5 +278,19 @@ public class UserService : IUserService
             newToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
 
         return newToken;
+    }
+
+    private void FillUserMembershipModel(UserProfileModel userProfile)
+    {
+        var notExpiredUserMembership = _userMemberships.Value.GetAll()
+            .Include(um => um.Membership)
+            .FirstOrDefault(um => um.UserId == userProfile.Id 
+                && um.StartDate.AddDays(um.Membership.DurationInDays) > DateTime.UtcNow);
+
+        if (notExpiredUserMembership == null)
+            return;
+
+        var userMembershipModel = _mapper.Value.Map<UserMembershipModel>(notExpiredUserMembership);
+        userProfile.UserMembershipModel = userMembershipModel;
     }
 }

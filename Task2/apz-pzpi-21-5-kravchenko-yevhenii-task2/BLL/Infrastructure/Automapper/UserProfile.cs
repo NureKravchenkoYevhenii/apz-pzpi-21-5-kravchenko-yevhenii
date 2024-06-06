@@ -24,6 +24,10 @@ public class UserProfile : Profile
                 opt => opt.MapFrom(src => src.UserProfile.BirthDate.ToLocalTime().ToLongTimeString()))
             .ForMember(dst => dst.Email,
                 opt => opt.MapFrom(src => src.UserProfile.Email))
+            .ForMember(dst => dst.RegistrationDate,
+                opt => opt.MapFrom(src => src.RegistrationDate.ToLocalTime()))
+            .ForMember(dst => dst.RegistrationDateStr,
+                opt => opt.MapFrom(src => src.RegistrationDate.ToLocalTime().ToLongTimeString()))
             .ReverseMap();
 
         CreateMap<RegisterUserModel, User>();

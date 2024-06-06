@@ -214,4 +214,10 @@
   <data name="PARKING_SESSION_NOT_FOUND" xml:space="preserve">
     <value>Parking session not found</value>
   </data>
+  <data name="PurchaseMembership" xml:space="preserve">
+    <value>Membership purchase</value>
+  </data>
+  <data name="PayForParkingSession" xml:space="preserve">
+    <value>Payment for parking</value>
+  </data>
 </root>

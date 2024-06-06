@@ -237,7 +237,7 @@ public class PaymentService : IPaymentService
 
         foreach (var typeStat in purchaseTypeStatistics)
         {
-            worksheet.Cells[$"A{row}"].Value = typeStat.Type;
+            worksheet.Cells[$"A{row}"].Value = Resources.Get(typeStat.Type.ToString());
             worksheet.Cells[$"B{row}"].Value = typeStat.Amount;
             row++;
         }
